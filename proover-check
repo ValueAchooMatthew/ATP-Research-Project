@@ -1,0 +1,210 @@
+#!/usr/bin/env python3
+import os, re, sys
+from dataclasses import dataclass, field
+
+TOKEN = re.compile(r"<=>|=>|<=|<~>|~\||~&|!=|[&|~()\[\],:=?!]|[A-Za-z0-9_$]+")
+
+def formula_tokens(text):
+    return TOKEN.findall(text)
+
+def normalize_formula(text):
+    return " ".join(formula_tokens(text))
+
+
+@dataclass
+class Step:
+    name: str
+    role: str
+    formula: str
+    source_kind: str = None
+    rule_name: str = None
+    status: str = None
+    parents: list = field(default_factory=list)
+    useful_info: str = ""
+
+
+def strip_comments(text):
+    return re.sub(r"%[^\n]*", "", text)
+
+def proof_header(text):
+    m = re.search(r"Proof:\s*(\S+)", text)
+    return m.group(1) if m else None
+
+def fof_units(text):
+    units = []
+    n = len(text)
+    i = 0
+    while True:
+        j = text.find("fof", i)
+        if j == -1:
+            break
+        before = text[j - 1] if j > 0 else ""
+        if before.isalnum() or before == "_":
+            i = j + 3
+            continue
+        k = j + 3
+        while k < n and text[k].isspace():
+            k += 1
+        if k >= n or text[k] != "(":
+            i = j + 3
+            continue
+        depth = 0
+        quoted = False
+        start = k + 1
+        p = k
+        while p < n:
+            c = text[p]
+            if quoted:
+                if c == "'":
+                    quoted = False
+            elif c == "'":
+                quoted = True
+            elif c == "(":
+                depth += 1
+            elif c == ")":
+                depth -= 1
+                if depth == 0:
+                    units.append(text[start:p])
+                    break
+            p += 1
+        i = p + 1
+    return units
+
+def split_top(s):
+    out = []
+    cur = ""
+    depth = 0
+    quoted = False
+    for c in s:
+        if quoted:
+            cur += c
+            if c == "'":
+                quoted = False
+            continue
+        if c == "'":
+            quoted = True
+            cur += c
+            continue
+        if c in "([":
+            depth += 1
+        elif c in ")]":
+            depth -= 1
+        if c == "," and depth == 0:
+            out.append(cur)
+            cur = ""
+        else:
+            cur += c
+    if cur.strip():
+        out.append(cur)
+    return out
+
+def parse_source(source):
+    fm = re.match(r"file\(\s*'?([^',]*)'?\s*(?:,\s*([\w$]+))?\s*\)", source)
+    if fm:
+        ref = fm.group(2)
+        return "file", None, None, [ref] if ref else []
+    im = re.match(r"inference\(\s*(\w+)\s*,\s*\[(.*)\]\s*,\s*\[(.*)\]\s*\)", source, re.DOTALL)
+    if im:
+        rule = im.group(1)
+        status = None
+        sm = re.search(r"status\((\w+)\)", im.group(2))
+        if sm:
+            status = sm.group(1)
+        parents = [p.strip() for p in split_top(im.group(3)) if p.strip()]
+        return "inference", rule, status, parents
+    return None, None, None, []
+
+def parse_annotated(unit):
+    parts = split_top(unit)
+    name = parts[0].strip()
+    role = parts[1].strip()
+    formula = parts[2].strip()
+    source_kind = rule_name = status = None
+    parents = []
+    useful_info = ""
+    if len(parts) > 3:
+        useful_info = ",".join(parts[3:]).strip()
+        source_kind, rule_name, status, parents = parse_source(useful_info)
+    return Step(name, role, formula, source_kind, rule_name, status, parents, useful_info)
+
+def parse_tstp(text):
+    return [parse_annotated(u) for u in fof_units(strip_comments(text))]
+
+
+def check_structure(problem_steps, proof_steps):
+    problem_by_name = {s.name: s for s in problem_steps}
+    proof_by_name = {s.name: s for s in proof_steps}
+    notes = []
+    flaw = False
+    for s in proof_steps:
+        if s.source_kind == "file":
+            ref = s.parents[0] if s.parents else s.name
+            origin = problem_by_name.get(ref)
+            if origin is None:
+                notes.append(f"{s.name}: problem has no formula named {ref}")
+                flaw = True
+            elif normalize_formula(s.formula) != normalize_formula(origin.formula):
+                notes.append(f"{s.name}: copied formula does not match problem {ref} "
+                             f"({normalize_formula(s.formula)} vs {normalize_formula(origin.formula)})")
+                flaw = True
+            else:
+                notes.append(f"{s.name}: matches problem formula {ref}")
+        elif s.source_kind == "inference":
+            missing = [p for p in s.parents if p not in proof_by_name]
+            if missing:
+                notes.append(f"{s.name}: references unknown parent(s) {missing}")
+                flaw = True
+            else:
+                notes.append(f"{s.name}: {s.rule_name} from {s.parents}, logical check pending")
+        else:
+            notes.append(f"{s.name}: input formula, no source")
+    return flaw, notes
+
+
+SZS = {
+    "Verified": "%SZS status Verified",
+    "FailedVerified": "%SZS status FailedVerified",
+    "NotVerified": "%SZS status NotVerified",
+}
+
+def verify(problem_text, proof_text):
+    problem_steps = parse_tstp(problem_text)
+    proof_steps = parse_tstp(proof_text)
+    flaw, notes = check_structure(problem_steps, proof_steps)
+    return ("FailedVerified" if flaw else "NotVerified"), notes
+
+def resolve_problem(proof_path, proof_text, given):
+    if given:
+        return given
+    header = proof_header(proof_text)
+    if not header:
+        return None
+    if os.path.exists(header):
+        return header
+    alt = os.path.join(os.path.dirname(proof_path), os.path.basename(header))
+    return alt if os.path.exists(alt) else header
+
+def main(argv):
+    if len(argv) == 2:
+        problem_path, proof_path = argv
+    elif len(argv) == 1:
+        problem_path, proof_path = None, argv[0]
+    else:
+        print(SZS["NotVerified"])
+        return 0
+    try:
+        with open(proof_path) as f:
+            proof_text = f.read()
+        problem_path = resolve_problem(proof_path, proof_text, problem_path)
+        with open(problem_path) as f:
+            problem_text = f.read()
+        verdict, notes = verify(problem_text, proof_text)
+    except Exception:
+        verdict, notes = "NotVerified", []
+    for line in notes:
+        print(line, file=sys.stderr)
+    print(SZS.get(verdict, SZS["NotVerified"]))
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
