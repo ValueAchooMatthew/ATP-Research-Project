@@ -19,6 +19,7 @@ COPY --from=build /opt/eprover/PROVER/eprover /usr/local/bin/eprover
 ENV ATP_EPROVER_BIN=eprover
 
 WORKDIR /app
-COPY proover_demo.py .
+COPY proover.py proover-check ./
 
-ENTRYPOINT ["python", "proover_demo.py"]
+# Verifier CLI: docker run --rm -v "$PWD:/data" atp-proover /data/problem.p /data/proof.s
+ENTRYPOINT ["python", "proover-check"]

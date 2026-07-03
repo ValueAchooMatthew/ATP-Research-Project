@@ -1,0 +1,16 @@
+# problem -> verifier verdict on an E-generated proof
+BOO006-1.p VerifiedGood
+BOO010-2.p VerifiedGood
+COL042-8.p VerifiedGood
+CSR036+2.p VerifiedGood
+GEO288+1.p VerifiedGood
+GRP237-1.p VerifiedGood
+LCL365-1.p VerifiedGood
+MGT063+1.p VerifiedGood
+PUZ028-6.p VerifiedGood
+SET183-6.p VerifiedGood
+SET844-1.p VerifiedGood
+SEU027+1.p VerifiedGood
+SWC078-1.p VerifiedGood
+SWW194+1.p VerifiedGood
+SYN190-1.p VerifiedGood
