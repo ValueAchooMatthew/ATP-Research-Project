@@ -120,3 +120,5 @@ would accept it.
 - `proover-check` — competition entry point (one SZS line, timeout guard).
 - `tests/run_tests.py` — test suite.
 - `Dockerfile` — self-contained image with E bundled.
+
+Please note that AI was used in part to help with the coding and documenting of this project.

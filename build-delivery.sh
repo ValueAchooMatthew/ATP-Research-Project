@@ -42,8 +42,8 @@ exec "$DIR/python/bin/python3" "$DIR/proover-check.py" "$@"
 SHIM
 chmod +x "build-tmp/$OUT/proover-check"
 cat > "build-tmp/$OUT/README.txt" <<'EOF'
-ProoVer 2026 entry
-==================
+ProofGuard 1.0 - ProoVer 2026 entry
+===================================
 Launch command (one problem/proof pair per invocation):
 
     ./proover-check PROBLEM_FILE PROOF_FILE
