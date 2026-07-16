@@ -44,9 +44,10 @@ chmod +x "build-tmp/$OUT/proover-check"
 cat > "build-tmp/$OUT/README.txt" <<'EOF'
 ProofGuard 1.0 - ProoVer 2026 entry
 ===================================
-Launch command (one problem/proof pair per invocation):
+Launch command (one proof per invocation; the problem file is located
+automatically via the proof's file() directives and header):
 
-    ./proover-check PROBLEM_FILE PROOF_FILE
+    ./proover-check PROOF_FILE
 
 Prints exactly one line to stdout:
     % SZS status VerifiedGood | VerifiedBad [: reason] | Unknown [: reason] | Timeout

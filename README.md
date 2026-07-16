@@ -6,7 +6,7 @@ the [ProoVer 2026 competition](https://proover-competition.github.io/).
 ## Launch command
 
 ```
-./proover-check [--time-limit SECONDS] [--quiet] PROBLEM PROOF
+./proover-check [--time-limit SECONDS] [--quiet] PROOF
 ```
 
 Prints exactly one line to stdout:
@@ -15,11 +15,14 @@ Prints exactly one line to stdout:
 % SZS status VerifiedGood | VerifiedBad [: reason] | Unknown [: reason] | Timeout
 ```
 
-Step-by-step details go to stderr (suppress with `--quiet`). The wall-clock
-budget defaults to 30 seconds (`--time-limit` or `PROOVER_TIME_LIMIT` override
-it); the verifier emits `Timeout` itself before the budget runs out. With a
-single argument the problem file is located via the proof's `% Proof : <path>`
-header.
+The problem file is located from the proof itself, via its `file('...')`
+directives and its `% Proof : <path>` header, tried relative to the working
+directory and to the proof's own directory. A two-argument form
+(`./proover-check PROBLEM PROOF`) naming the problem explicitly is also
+accepted. Step-by-step details go to stderr (suppress with `--quiet`). The
+wall-clock budget defaults to 30 seconds (`--time-limit` or
+`PROOVER_TIME_LIMIT` override it); the verifier emits `Timeout` itself before
+the budget runs out.
 
 Requires Python 3.8+ and the E prover (`eprover` on PATH, or point
 `ATP_EPROVER_BIN` at a binary).

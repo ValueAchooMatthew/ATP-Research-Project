@@ -2,11 +2,14 @@
 """ProoVer 2026 entry point.
 
 Usage:
-    proover-check [--time-limit SECONDS] [--quiet] PROBLEM PROOF
     proover-check [--time-limit SECONDS] [--quiet] PROOF
+    proover-check [--time-limit SECONDS] [--quiet] PROBLEM PROOF
 
-With a single argument the problem file is located via the proof's
-"% Proof : <path>" header. Prints exactly one line to stdout:
+The problem file is located from the proof itself: the paths named by its
+file('...') directives and its "% Proof : <path>" header are tried relative
+to the working directory and to the proof's own directory. A two-argument
+form naming the problem explicitly is also accepted. Prints exactly one
+line to stdout:
 
     % SZS status VerifiedGood | VerifiedBad [: reason] | Unknown [: reason] | Timeout
 
@@ -18,15 +21,23 @@ import os, re, sys, threading, time
 def resolve_problem(proof_path, proof_text, given):
     if given:
         return given
+    candidates = []
     m = re.search(r"%\s*Proof\s*:\s*(\S+)", proof_text)
-    if not m:
-        return None
-    header = m.group(1)
-    for candidate in (header,
-                      os.path.join(os.path.dirname(os.path.abspath(proof_path)), header)):
-        if os.path.exists(candidate):
-            return candidate
-    return header
+    if m:
+        candidates.append(m.group(1))
+    candidates += re.findall(r"file\(\s*'([^']+)'", proof_text)
+    proof_dir = os.path.dirname(os.path.abspath(proof_path))
+    tried = set()
+    for rel in candidates:
+        if rel in tried:
+            continue
+        tried.add(rel)
+        for cand in (rel,
+                     os.path.join(proof_dir, rel),
+                     os.path.join(proof_dir, os.path.basename(rel))):
+            if os.path.exists(cand):
+                return cand
+    return candidates[0] if candidates else None
 
 
 def parse_args(argv):
