@@ -1,127 +1,94 @@
-# ProofGuard
+# 🛡️ ProofGuard
 
-ProofGuard is an independent checker for machine-generated proofs. It takes a
-first-order logic problem and a proof of it written in the
-[TSTP format](https://tptp.org/UserDocs/QuickGuide/Derivations.html), and
-decides whether the proof actually proves the theorem. I built it for
-[ProoVer 2026](https://proover-competition.github.io/competitions/2026/), the
-first international competition for proof checkers, where it placed 5th of 8
-in the regular division. A paper about the system and what the competition
-revealed about it is in progress with Alicia Marinache (McMaster University).
+An independent checker for machine-generated proofs. Give it a first-order
+logic problem and a proof in the [TSTP format](https://tptp.org/UserDocs/QuickGuide/Derivations.html),
+and it tells you whether the proof holds.
 
-## Why this matters
+- 🏆 Built for [ProoVer 2026](https://proover-competition.github.io/competitions/2026/),
+  the first international competition for proof checkers (IJCAR, FLoC 2026, Lisbon).
+  Placed **5th of 8**.
+- 📄 Paper in progress with Alicia Marinache (McMaster University).
+- 🐍 About 1,000 lines of Python. No dependencies beyond the E prover.
 
-Automated theorem provers, and increasingly AI systems, output proofs rather
-than just answers. A proof is only useful if something independent of the
-system that produced it can confirm that every step holds. As Geoff Sutcliffe
-puts it, provers are "complex pieces of software, and thus may have bugs that
-make them unsound", and checking their implementations directly is impractical,
-so the proofs they output are checked instead
-([Sutcliffe, 2006](https://www.cs.miami.edu/home/geoff/Papers/Journal/2006_Sut06_IJAIT-TBA.pdf)).
-The same problem now shows up with large language models, which produce
-convincing proofs that cite the wrong facts or claim steps that do not follow.
+## 🧭 Why it matters
 
-ProofGuard checks a proof one step at a time. Steps copied from the problem
-file are compared against it, the negated conjecture and Skolemization steps
-are rebuilt and compared structurally, and every other step is handed to the
-E prover as a small local problem: do these premises imply this formula? The
-checker never tries to prove the original theorem itself. It reports one of
-four verdicts, `VerifiedGood`, `VerifiedBad`, `Unknown`, or `Timeout`, and it
-is built to say `Unknown` rather than guess. The whole system is about a
-thousand lines of Python with no dependencies beyond E.
+- Theorem provers, and now AI systems, output proofs. Those proofs need to be
+  checked by something independent of whatever produced them.
+- Provers are "complex pieces of software, and thus may have bugs that make
+  them unsound" ([Sutcliffe, 2006](https://www.cs.miami.edu/home/geoff/Papers/Journal/2006_Sut06_IJAIT-TBA.pdf)).
+  LLMs write convincing proofs that cite the wrong facts.
+- ProofGuard checks every step on its own, never re-proves the theorem, and
+  answers `Unknown` instead of guessing.
 
-## Competition results
+## 🏁 Results
 
-ProoVer 2026 ran on 27 July 2026 at IJCAR, part of FLoC 2026 in Lisbon. Each
-checker had 30 seconds per proof on 91 proofs, 47 of them deliberately broken.
-Scoring was +2 for rejecting a bad proof, +1 for accepting a good one, -1 for
-rejecting a good one, and -10 for accepting a bad one.
+ProoVer 2026, 27 July 2026. 91 proofs, 47 of them deliberately broken, 30
+seconds each. Scoring: +2 reject a bad proof, +1 accept a good one, -1 reject
+a good one, -10 accept a bad one.
 
-| System | Score | Bad as bad | Good as good | Gave up | Good as bad | Bad as good |
-|---|---:|---:|---:|---:|---:|---:|
-| GAPT 2.20 | 111 | 41 | 34 | 11 | 5 | 0 |
-| VaLeaDate 0.1 | 98 | 46 | 24 | 3 | 18 | 0 |
-| Nörgler 1.1 | 93 | 46 | 27 | 1 | 16 | 1 |
-| ProofCheck 1.0 | 75 | 42 | 31 | 5 | 10 | 3 |
-| **ProofGuard 1.0** | **49** | **40** | **30** | **5** | **11** | **5** |
-| mrs-proover 0.2.0 | 47 | 39 | 31 | 4 | 12 | 5 |
-| PyCheck 0.1 | 41 | 28 | 37 | 19 | 2 | 5 |
-| CheckProof 0.1 | -103 | 25 | 28 | 10 | 11 | 17 |
+| System | Score | Bad proofs accepted |
+|---|---:|---:|
+| GAPT 2.20 (TU Wien) | 111 | 0 |
+| VaLeaDate 0.1 (TU Wien) | 98 | 0 |
+| Nörgler 1.1 (Greifswald) | 93 | 1 |
+| ProofCheck 1.0 | 75 | 3 |
+| **ProofGuard 1.0** | **49** | **5** |
+| mrs-proover 0.2.0 | 47 | 5 |
+| PyCheck 0.1 (Stephan Schulz, author of E) | 41 | 5 |
+| CheckProof 0.1 | -103 | 17 |
 
-Source: the [official results page](https://tptp.org/CASC/J13/WWWFiles/Results.html#PRVProblems)
-(the per-proof outputs for every system are linked from it). The field included
-entries from TU Wien, the University of Greifswald, and E's author Stephan
-Schulz. See also the
-[ProoVer 2026 proceedings](https://proover-competition.github.io/assets/ProoVer2026_proceedings.pdf),
-which contain every system's description, the
-[competition system descriptions](https://tptp.org/CASC/J13/SystemDescriptions.html#ProofGuard---1.0),
-and the [full problem set](https://proover-competition.github.io/assets/ProoVer2026.zip).
-My submitted system description is in this repository as
-[proof-guard-system-description.pdf](proof-guard-system-description.pdf).
+ProofGuard on the 91 proofs:
 
-ProofGuard correctly rejected 40 of the 47 bad proofs, correctly accepted 30
-of the 44 good ones, and averaged 1.92 seconds per proof. Its five false
-acceptances cost 50 points, which is the gap between 5th place and 2nd.
+- ✅ 40 of 47 bad proofs rejected
+- ✅ 30 of 44 good proofs accepted
+- ❌ 11 good proofs rejected (-11)
+- ❌ 5 bad proofs accepted (-50)
+- ⚡ 1.92 seconds per proof on average
 
-### What went wrong, and why it is the interesting part
+🔗 [Official results](https://tptp.org/CASC/J13/WWWFiles/Results.html#PRVProblems) ·
+[Proceedings](https://proover-competition.github.io/assets/ProoVer2026_proceedings.pdf) ·
+[System descriptions](https://tptp.org/CASC/J13/SystemDescriptions.html#ProofGuard---1.0) ·
+[Problem set](https://proover-competition.github.io/assets/ProoVer2026.zip) ·
+[My system description (PDF)](proof-guard-system-description.pdf)
 
-I downloaded the published problem set after the competition, re-ran the exact
-submitted package, and reproduced 89 of the 91 official verdicts (the other two
-were timeouts on the slower competition hardware). Every misclassification
-traces to a specific decision in the code.
+## 🔍 Failure analysis
 
-All five accepted bad proofs were logically sound. They were bad because they
-broke the competition's certificate rules: an axiom step that cited one formula
-but stated another, Skolemization steps missing a mandatory annotation, and a
-Skolemization step that falsely claimed to be a logical consequence. Four of
-the five slipped through fallbacks I had added so ProofGuard could handle the
-messy output of real provers like E and SNARK. Those fallbacks confirmed that
-each step was *sound*, which is not the same as confirming it was *what it
-claimed to be*. Two of those five proofs fooled five and six of the ten
-competing systems respectively, including Geoff Sutcliffe's own GDV.
+I re-ran the exact submitted package on the published problem set and
+reproduced 89 of the 91 official verdicts. Every error traces to a specific
+decision in the code.
 
-All eleven rejected good proofs were the opposite error: the checker returned
-`VerifiedBad` for constructions it did not handle (Skolem arguments in an
-unexpected order, forward references the rules allow, an existential hidden
-under a negation) instead of returning `Unknown` as its own policy required.
+- 🔴 **5 bad proofs accepted.** All five were logically sound. They broke the
+  competition's certificate rules instead: an axiom step citing one formula but
+  stating another, Skolemization steps missing a required annotation, a step
+  falsely claiming to be a logical consequence. Four came from fallbacks I
+  added so ProofGuard could handle messy real-world prover output. Two of
+  these proofs also fooled 5 and 6 of the 10 competing systems, including
+  Sutcliffe's own GDV.
+- 🟠 **11 good proofs rejected.** The checker answered `VerifiedBad` for
+  constructions it did not handle, where its own policy called for `Unknown`.
+- 📊 **Had those 16 been reported as `Unknown`, the score would have been 110,**
+  one point behind the winner.
+- 🧪 **Pre-competition testing missed all of it.** 22/22 example cases, 15/15
+  E-generated proofs, 58 real proofs from five provers with 0 false rejections,
+  45/45 mutated proofs never accepted. None of these tests ever broke a
+  certificate annotation.
 
-The lesson, which the paper is built around, is that a checker can only be as
-conservative as the specification it measures itself against. ProofGuard was
-conservative about logical soundness and not about the certificate format, and
-every point it lost came from exactly that gap. Had those 16 proofs been
-reported as `Unknown`, the score would have been 110, one point behind the
-winner.
+Takeaway: ProofGuard was conservative about logical soundness. The competition
+graded conformance to the certificate specification. The paper is built
+around that gap.
 
-### Testing before the competition
-
-- 22/22 cases on the official examples plus hand-written adversarial proofs
-- 15/15 proofs generated by E on TPTP problems verified
-- 58 real proofs from five different provers (E, Vampire, SNARK, Prover9,
-  Drodi): 15 verified, 43 `Unknown`, 0 false rejections
-- 45/45 mutated proofs correctly never accepted
-
-None of this caught the competition failures, because every test corpus was
-either real prover output (which rewards leniency) or a semantic mutation
-(which never breaks an annotation). That gap in the testing is itself one of
-the paper's findings.
-
-## The paper
+## 📝 Paper
 
 **ProofGuard: A Conservative Checker for TSTP Refutation Proofs**, with Alicia
-Marinache (McMaster University). Drafted in Overleaf.
+Marinache (McMaster University). Drafted in Overleaf. Status as of October 2026:
 
-Current state (October 2026): the literature survey, the description of the
-system, and the verification strategy are written. The introduction is in
-progress. The decision policy, implementation, evaluation, and future work
-sections exist as detailed notes and are being written up in that order. The
-evaluation will present the competition results and the failure analysis
-above as a reproducible negative result, and the future work covers a strict
-conformance mode, auditing every `VerifiedBad` against the decision policy, and
-specification-level mutation testing.
-
-Venues under consideration are an arXiv preprint, the Journal of Open Source
-Software, and the next editions of the CADE system description track, AITP,
-and the NeurIPS MATH-AI workshop.
+- ✅ Written: literature survey, system model, verification strategy
+- ✍️ In progress: introduction
+- 🗒️ Detailed notes, being written up next: decision policy, implementation,
+  evaluation (the failure analysis above as a reproducible result), future work
+- 🎯 Venues under consideration: arXiv preprint, Journal of Open Source
+  Software, and the next editions of the CADE system description track, AITP,
+  and the NeurIPS MATH-AI workshop
 
 ## Usage and development
 
