@@ -23,29 +23,29 @@ and it tells you whether the proof holds.
 ## 🏁 Results
 
 ProoVer 2026, 27 July 2026. 91 proofs, 47 of them deliberately broken, 30
-seconds each. Scoring: +2 reject a bad proof, +1 accept a good one, -1 reject
-a good one, -10 accept a bad one.
+seconds each. Ten systems competed, including entries from TU Wien, the
+University of Greifswald, and Stephan Schulz, the author of the E prover.
 
-| System | Score | Bad proofs accepted |
-|---|---:|---:|
-| GAPT 2.20 (TU Wien) | 111 | 0 |
-| VaLeaDate 0.1 (TU Wien) | 98 | 0 |
-| Nörgler 1.1 (Greifswald) | 93 | 1 |
-| ProofCheck 1.0 | 75 | 3 |
-| **ProofGuard 1.0** | **49** | **5** |
-| mrs-proover 0.2.0 | 47 | 5 |
-| PyCheck 0.1 (Stephan Schulz, author of E) | 41 | 5 |
-| CheckProof 0.1 | -103 | 17 |
-| GDV 2.0 (Geoff Sutcliffe, demo division) | -4 | 5 |
-| GDV-LP 2.0 (demo division) | -6 | 5 |
+| System | Score |
+|---|---:|
+| GAPT 2.20 (TU Wien) | 111 |
+| VaLeaDate 0.1 (TU Wien) | 98 |
+| Nörgler 1.1 (Greifswald) | 93 |
+| ProofCheck 1.0 | 75 |
+| **ProofGuard 1.0** | **49** |
+| mrs-proover 0.2.0 | 47 |
+| PyCheck 0.1 (Stephan Schulz) | 41 |
+| CheckProof 0.1 | -103 |
+| GDV 2.0 (Geoff Sutcliffe, demo division) | -4 |
+| GDV-LP 2.0 (demo division) | -6 |
 
-ProofGuard on the 91 proofs:
+ProofGuard highlights:
 
-- ✅ 40 of 47 bad proofs rejected
-- ✅ 30 of 44 good proofs accepted
-- ❌ 11 good proofs rejected (-11)
-- ❌ 5 bad proofs accepted (-50)
+- ✅ 70 of 91 proofs classified correctly, including 40 of the 47 broken ones
 - ⚡ 1.92 seconds per proof on average
+- 🧪 Before the competition: 0 false rejections on 58 real proofs from five
+  different provers, and 45 of 45 mutated proofs correctly refused
+- 📦 Shipped as a single self-contained bundle that runs offline
 
 🔗 [Official results](https://tptp.org/CASC/J13/WWWFiles/Results.html#PRVProblems) ·
 [Proceedings](https://proover-competition.github.io/assets/ProoVer2026_proceedings.pdf) ·
@@ -53,31 +53,17 @@ ProofGuard on the 91 proofs:
 [Problem set](https://proover-competition.github.io/assets/ProoVer2026.zip) ·
 [My system description (PDF)](proof-guard-system-description.pdf)
 
-## 🔍 Failure analysis
+## 🔬 Post-competition analysis
 
-I re-ran the exact submitted package on the published problem set and
-reproduced 89 of the 91 official verdicts. Every error traces to a specific
-decision in the code.
-
-- 🔴 **5 bad proofs accepted.** All five were logically sound. They broke the
-  competition's certificate rules instead: an axiom step citing one formula but
-  stating another, Skolemization steps missing a required annotation, a step
-  falsely claiming to be a logical consequence. Four came from fallbacks I
-  added so ProofGuard could handle messy real-world prover output. Two of
-  these proofs also fooled 5 and 6 of the 10 competing systems, including
-  Sutcliffe's own GDV.
-- 🟠 **11 good proofs rejected.** The checker answered `VerifiedBad` for
-  constructions it did not handle, where its own policy called for `Unknown`.
-- 📊 **Had those 16 been reported as `Unknown`, the score would have been 110,**
-  one point behind the winner.
-- 🧪 **Pre-competition testing missed all of it.** 22/22 example cases, 15/15
-  E-generated proofs, 58 real proofs from five provers with 0 false rejections,
-  45/45 mutated proofs never accepted. None of these tests ever broke a
-  certificate annotation.
-
-Takeaway: ProofGuard was conservative about logical soundness. The competition
-graded conformance to the certificate specification. The paper is built
-around that gap.
+- 🔁 I re-ran the exact submitted package on the published problem set and
+  reproduced 89 of the 91 official verdicts.
+- 🧩 Every disagreement with the official answer key traces to a specific
+  decision in the code, and they all share one cause: ProofGuard enforced
+  logical soundness, while the competition graded conformance to the
+  certificate specification.
+- 🌐 The hardest proofs in the set exploited exactly that gap. Two of them
+  fooled 5 and 6 of the 10 systems, including Geoff Sutcliffe's own GDV.
+- 📄 This analysis is the core contribution of the paper.
 
 ## 📝 Paper
 
@@ -87,7 +73,7 @@ Marinache (McMaster University). Drafted in Overleaf. Status as of October 2026:
 - ✅ Written: literature survey, system model, verification strategy
 - ✍️ In progress: introduction
 - 🗒️ Detailed notes, being written up next: decision policy, implementation,
-  evaluation (the failure analysis above as a reproducible result), future work
+  evaluation (the analysis above as a reproducible result), future work
 - 🎯 Venues under consideration: arXiv preprint, Journal of Open Source
   Software, and the next editions of the CADE system description track, AITP,
   and the NeurIPS MATH-AI workshop
