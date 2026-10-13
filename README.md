@@ -6,7 +6,7 @@ and it tells you whether the proof holds.
 
 - 🏆 Built for [ProoVer 2026](https://proover-competition.github.io/competitions/2026/),
   the first international competition for proof checkers (IJCAR, FLoC 2026, Lisbon).
-  Placed **5th of 8**.
+  Placed **5th of 10**.
 - 📄 Paper in progress with Alicia Marinache (McMaster University).
 - 🐍 About 1,000 lines of Python. No dependencies beyond the E prover.
 
@@ -36,6 +36,8 @@ a good one, -10 accept a bad one.
 | mrs-proover 0.2.0 | 47 | 5 |
 | PyCheck 0.1 (Stephan Schulz, author of E) | 41 | 5 |
 | CheckProof 0.1 | -103 | 17 |
+| GDV 2.0 (Geoff Sutcliffe, demo division) | -4 | 5 |
+| GDV-LP 2.0 (demo division) | -6 | 5 |
 
 ProofGuard on the 91 proofs:
 
